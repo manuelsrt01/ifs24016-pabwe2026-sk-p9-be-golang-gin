@@ -38,7 +38,8 @@ type AuthorInfo struct {
 
 type PostResponse struct {
 	ID             uint        `json:"id"`
-	UserID         uint        `json:"user_id"`
+	UserID         uint        `json:"user_id,omitempty"`
+	AuthorName     string      `json:"author_name,omitempty"`
 	Title          string      `json:"title"`
 	Slug           string      `json:"slug"`
 	Category       string      `json:"category"`
@@ -55,13 +56,14 @@ type PostResponse struct {
 }
 
 type PostStatsResponse struct {
-	Total          int64 `json:"total"`
-	Published      int64 `json:"published"`
-	Draft          int64 `json:"draft"`
-	TotalArtikel   int64 `json:"total_artikel"`
-	TotalTerbit    int64 `json:"total_terbit"`
-	TotalSelesai   int64 `json:"total_selesai"`
-	BelumSelesai   int64 `json:"belum_selesai"`
+	Total         int64 `json:"total"`
+	Published     int64 `json:"published"`
+	Draft         int64 `json:"draft"`
+	TotalArticles int64 `json:"total_articles"`
+	TotalArtikel  int64 `json:"total_artikel"`
+	TotalTerbit   int64 `json:"total_terbit"`
+	TotalSelesai  int64 `json:"total_selesai"`
+	BelumSelesai  int64 `json:"belum_selesai"`
 }
 
 type AdminUserSummary struct {
@@ -72,6 +74,8 @@ type AdminUserSummary struct {
 	TotalPosts     int64     `json:"total_posts"`
 	PublishedPosts int64     `json:"published_posts"`
 	DraftPosts     int64     `json:"draft_posts"`
+	TotalArticles  int64     `json:"total_articles"`
+	TotalPublished int64     `json:"total_published"`
 	TotalArtikel   int64     `json:"total_artikel"`
 	TotalTerbit    int64     `json:"total_terbit"`
 	CreatedAt      time.Time `json:"created_at"`

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrTopicRequired = errors.New("topik artikel wajib diisi")
+	ErrTopicRequired = errors.New("field topic artikel wajib diisi")
 )
 
 type Service interface {

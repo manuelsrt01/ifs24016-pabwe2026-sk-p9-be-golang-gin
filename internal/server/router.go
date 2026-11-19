@@ -65,7 +65,7 @@ func NewRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 		{
 			authGroup.POST("/register", authHandler.Register)
 			authGroup.POST("/login", authHandler.Login)
-			authGroup.POST("/logout", middleware.Auth(cfg.AppKey), authHandler.Logout)
+			authGroup.POST("/logout", authHandler.Logout)
 			authGroup.GET("/profile", middleware.Auth(cfg.AppKey), authHandler.GetProfile)
 			authGroup.PUT("/profile", middleware.Auth(cfg.AppKey), authHandler.UpdateProfile)
 		}

@@ -25,7 +25,6 @@ func NewHandler(service Service) *Handler {
 // @Param request body RegisterRequest true "Data Registrasi"
 // @Success 201 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
-// @Failure 409 {object} response.APIResponse
 // @Router /api/auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
@@ -34,21 +33,17 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.Register(req)
+	res, err := h.service.Register(req)
 	if err != nil {
-		if errors.Is(err, ErrInvalidInput) {
+		if errors.Is(err, ErrInvalidInput) || errors.Is(err, ErrUsernameTaken) || errors.Is(err, ErrEmailTaken) {
 			response.Fail(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		if errors.Is(err, ErrUsernameTaken) || errors.Is(err, ErrEmailTaken) {
-			response.Fail(c, http.StatusConflict, err.Error())
 			return
 		}
 		response.Error(c, http.StatusInternalServerError, "Gagal mendaftarkan pengguna")
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Registrasi berhasil", user)
+	response.Success(c, http.StatusCreated, "Registrasi berhasil", res)
 }
 
 // Login godoc
@@ -70,6 +65,10 @@ func (h *Handler) Login(c *gin.Context) {
 
 	res, err := h.service.Login(req)
 	if err != nil {
+		if errors.Is(err, ErrInvalidInput) {
+			response.Fail(c, http.StatusBadRequest, err.Error())
+			return
+		}
 		if errors.Is(err, ErrInvalidCredentials) {
 			response.Fail(c, http.StatusUnauthorized, err.Error())
 			return
@@ -121,7 +120,6 @@ func (h *Handler) GetProfile(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
-// @Failure 409 {object} response.APIResponse
 // @Router /api/auth/profile [put]
 func (h *Handler) UpdateProfile(c *gin.Context) {
 	userID := c.GetUint("user_id")
@@ -133,16 +131,12 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 
 	user, err := h.service.UpdateProfile(userID, req)
 	if err != nil {
-		if errors.Is(err, ErrInvalidInput) {
+		if errors.Is(err, ErrInvalidInput) || errors.Is(err, ErrUsernameTaken) || errors.Is(err, ErrEmailTaken) {
 			response.Fail(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		if errors.Is(err, ErrUserNotFound) {
 			response.Fail(c, http.StatusNotFound, err.Error())
-			return
-		}
-		if errors.Is(err, ErrUsernameTaken) || errors.Is(err, ErrEmailTaken) {
-			response.Fail(c, http.StatusConflict, err.Error())
 			return
 		}
 		response.Error(c, http.StatusInternalServerError, "Gagal memperbarui profil")

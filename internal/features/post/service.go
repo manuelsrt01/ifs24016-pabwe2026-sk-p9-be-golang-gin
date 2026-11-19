@@ -88,6 +88,7 @@ func toPostResponse(p *database.Post) PostResponse {
 	res := PostResponse{
 		ID:             p.ID,
 		UserID:         p.UserID,
+		AuthorName:     "Penulis",
 		Title:          p.Title,
 		Slug:           p.Slug,
 		Category:       p.Category,
@@ -102,6 +103,7 @@ func toPostResponse(p *database.Post) PostResponse {
 		UpdatedAt:      p.UpdatedAt,
 	}
 	if p.User != nil && p.User.ID != 0 {
+		res.AuthorName = p.User.Username
 		res.Author = &AuthorInfo{
 			ID:       p.User.ID,
 			Username: p.User.Username,
@@ -109,6 +111,12 @@ func toPostResponse(p *database.Post) PostResponse {
 			Role:     p.User.Role,
 		}
 	}
+	return res
+}
+
+func toPublicPostResponse(p *database.Post) PostResponse {
+	res := toPostResponse(p)
+	res.UserID = 0
 	return res
 }
 
@@ -142,7 +150,7 @@ func (s *service) ListPublicPosts(query, category string) ([]PostResponse, error
 	}
 	res := make([]PostResponse, 0, len(posts))
 	for i := range posts {
-		res = append(res, toPostResponse(&posts[i]))
+		res = append(res, toPublicPostResponse(&posts[i]))
 	}
 	return res, nil
 }
@@ -152,7 +160,7 @@ func (s *service) GetPublicPostBySlug(slug string) (*PostResponse, error) {
 	if err != nil {
 		return nil, ErrPostNotFound
 	}
-	resp := toPostResponse(p)
+	resp := toPublicPostResponse(p)
 	return &resp, nil
 }
 
@@ -233,9 +241,12 @@ func (s *service) UpdatePost(userID, postID uint, isAdmin bool, req UpdatePostRe
 	}
 
 	title := strings.TrimSpace(req.Title)
+	if title == "" {
+		title = p.Title
+	}
 	content := strings.TrimSpace(req.Content)
-	if title == "" || content == "" {
-		return nil, ErrInvalidPostInput
+	if content == "" {
+		content = p.Content
 	}
 
 	if title != p.Title {
@@ -247,8 +258,14 @@ func (s *service) UpdatePost(userID, postID uint, isAdmin bool, req UpdatePostRe
 	}
 
 	p.Title = title
-	p.Category = NormalizeCategory(req.Category)
-	p.Excerpt = BuildExcerpt(req.Excerpt, content)
+	if strings.TrimSpace(req.Category) != "" {
+		p.Category = NormalizeCategory(req.Category)
+	}
+	if strings.TrimSpace(req.Excerpt) != "" {
+		p.Excerpt = strings.TrimSpace(req.Excerpt)
+	} else {
+		p.Excerpt = BuildExcerpt(p.Excerpt, content)
+	}
 	p.Content = content
 	if req.CoverImagePath != "" {
 		p.CoverImagePath = strings.TrimSpace(req.CoverImagePath)
@@ -314,13 +331,14 @@ func (s *service) GetAuthorStats(userID uint) (*PostStatsResponse, error) {
 		return nil, err
 	}
 	return &PostStatsResponse{
-		Total:        total,
-		Published:    published,
-		Draft:        draft,
-		TotalArtikel: total,
-		TotalTerbit:  published,
-		TotalSelesai: published,
-		BelumSelesai: draft,
+		Total:         total,
+		Published:     published,
+		Draft:         draft,
+		TotalArticles: total,
+		TotalArtikel:  total,
+		TotalTerbit:   published,
+		TotalSelesai:  published,
+		BelumSelesai:  draft,
 	}, nil
 }
 
@@ -346,6 +364,8 @@ func (s *service) AdminListUsers() ([]AdminUserSummary, error) {
 			TotalPosts:     total,
 			PublishedPosts: pub,
 			DraftPosts:     total - pub,
+			TotalArticles:  total,
+			TotalPublished: pub,
 			TotalArtikel:   total,
 			TotalTerbit:    pub,
 			CreatedAt:      u.CreatedAt,

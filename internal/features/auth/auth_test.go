@@ -84,12 +84,23 @@ func TestAuthFeature_FullLifecycle(t *testing.T) {
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBuffer(regBody)))
 	assert.Equal(t, http.StatusCreated, w.Code)
 
-	// 4. Register duplicate username
+	// 3b. Register admin role success
+	regAdminBody, _ := json.Marshal(RegisterRequest{
+		Username: "admin2",
+		Email:    "admin2@delcom.org",
+		Password: "password123",
+		Role:     "admin",
+	})
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBuffer(regAdminBody)))
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	// 4. Register duplicate username -> 400
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBuffer(regBody)))
-	assert.Equal(t, http.StatusConflict, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	// 5. Register duplicate email
+	// 5. Register duplicate email -> 400
 	dupEmailBody, _ := json.Marshal(RegisterRequest{
 		Username: "budi2",
 		Email:    "budi@delcom.org",
@@ -97,17 +108,27 @@ func TestAuthFeature_FullLifecycle(t *testing.T) {
 	})
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBuffer(dupEmailBody)))
-	assert.Equal(t, http.StatusConflict, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	// 5b. Register invalid email -> 400
+	badEmailBody, _ := json.Marshal(RegisterRequest{
+		Username: "budi3",
+		Email:    "bukan-email",
+		Password: "password123",
+	})
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBuffer(badEmailBody)))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	// 6. Login invalid JSON
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBufferString("{bad")))
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	// 7. Login empty credentials
+	// 7. Login empty credentials -> 400
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBufferString(`{"username":"","password":""}`)))
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	// 8. Login non-existent user
 	w = httptest.NewRecorder()
@@ -162,14 +183,14 @@ func TestAuthFeature_FullLifecycle(t *testing.T) {
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPut, "/api/auth/profile", bytes.NewBufferString(`{"username":"","email":""}`)))
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	// 17. UpdateProfile conflict username & email (against seeded "admin")
+	// 17. UpdateProfile conflict username & email (against seeded "admin") -> 400
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPut, "/api/auth/profile", bytes.NewBufferString(`{"username":"admin","email":"budi@delcom.org"}`)))
-	assert.Equal(t, http.StatusConflict, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPut, "/api/auth/profile", bytes.NewBufferString(`{"username":"budi","email":"admin@delcom.org"}`)))
-	assert.Equal(t, http.StatusConflict, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	// 18. UpdateProfile success with new username, email, and password
 	w = httptest.NewRecorder()
@@ -193,7 +214,7 @@ func TestAuthService_InternalErrors(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBufferString(`{"username":"u1","email":"u1@a.com","password":"123"}`))
+	c.Request = httptest.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBufferString(`{"username":"u1","email":"u1@a.com","password":"123456"}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 	h.Register(c)
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -201,7 +222,7 @@ func TestAuthService_InternalErrors(t *testing.T) {
 	w = httptest.NewRecorder()
 	c, _ = gin.CreateTestContext(w)
 	c.Set("user_id", uint(1))
-	c.Request = httptest.NewRequest(http.MethodPut, "/api/auth/profile", bytes.NewBufferString(`{"username":"admin","email":"admin@delcom.org","password":"123"}`))
+	c.Request = httptest.NewRequest(http.MethodPut, "/api/auth/profile", bytes.NewBufferString(`{"username":"admin","email":"admin@delcom.org","password":"123456"}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 	h.UpdateProfile(c)
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -210,7 +231,7 @@ func TestAuthService_InternalErrors(t *testing.T) {
 
 	// 2. Repo Create error on Register
 	svcFailCreate := NewService(&failCreateRepo{Repository: repo}, "sec")
-	_, err = svcFailCreate.Register(RegisterRequest{Username: "u2", Email: "u2@a.com", Password: "123"})
+	_, err = svcFailCreate.Register(RegisterRequest{Username: "u2", Email: "u2@a.com", Password: "123456"})
 	assert.Error(t, err)
 
 	// 3. Repo Update error on UpdateProfile

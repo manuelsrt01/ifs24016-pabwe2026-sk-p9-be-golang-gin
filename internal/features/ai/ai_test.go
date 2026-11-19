@@ -295,9 +295,9 @@ func TestAIServiceAndHandler(t *testing.T) {
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/posts/ai-generate", bytes.NewBuffer(bReqNoSearch)))
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	// 5. AI client error -> 502 Bad Gateway
+	// 5. AI client error -> 500 Internal Server Error
 	aiMode = "fail"
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/posts/ai-generate", bytes.NewBuffer(bReq)))
-	assert.Equal(t, http.StatusBadGateway, w.Code)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }

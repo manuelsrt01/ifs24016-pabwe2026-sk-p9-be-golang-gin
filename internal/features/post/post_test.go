@@ -254,9 +254,10 @@ func TestPostFeature_FullLifecycle(t *testing.T) {
 	r.ServeHTTP(w, reqUpdForbidden)
 	assert.Equal(t, http.StatusForbidden, w.Code)
 
+	// Empty fields on UpdatePost keep existing values (200 OK)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPut, "/api/posts/1", bytes.NewBufferString(`{"title":"","content":""}`)))
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	fFalse := false
 	updReq1, _ := json.Marshal(UpdatePostRequest{

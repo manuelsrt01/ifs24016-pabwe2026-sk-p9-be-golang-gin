@@ -204,10 +204,6 @@ func (h *Handler) UpdatePost(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	p, err := h.service.UpdatePost(userID, postID, isAdminCtx(c), req)
 	if err != nil {
-		if errors.Is(err, ErrInvalidPostInput) {
-			response.Fail(c, http.StatusBadRequest, err.Error())
-			return
-		}
 		if errors.Is(err, ErrForbidden) {
 			response.Fail(c, http.StatusForbidden, err.Error())
 			return

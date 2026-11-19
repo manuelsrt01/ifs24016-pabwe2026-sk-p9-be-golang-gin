@@ -26,7 +26,7 @@ func NewHandler(service Service) *Handler {
 // @Param request body GenerateBlogRequest true "Parameter Topik AI Generator"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
-// @Failure 502 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/posts/ai-generate [post]
 func (h *Handler) GenerateBlog(c *gin.Context) {
 	var req GenerateBlogRequest
@@ -41,7 +41,7 @@ func (h *Handler) GenerateBlog(c *gin.Context) {
 			response.Fail(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		response.Error(c, http.StatusBadGateway, err.Error())
+		response.Error(c, http.StatusInternalServerError, "Gagal menghubungi layanan OpenAI: "+err.Error())
 		return
 	}
 
