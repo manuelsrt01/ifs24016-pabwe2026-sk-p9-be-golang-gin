@@ -1,0 +1,144 @@
+swagger: "2.0"
+info:
+  title: "Delcom Blog REST API"
+  description: "Dokumentasi REST API Delcom Blog — Platform Publikasi Artikel Multi-Tier dengan AI Content Generator & Integrasi Search Engine"
+  version: "1.0.0"
+host: "localhost:8081"
+basePath: "/"
+schemes:
+  - "http"
+securityDefinitions:
+  BearerAuth:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+paths:
+  /api/public/categories:
+    get:
+      tags: ["Public"]
+      summary: "Mengambil daftar seluruh kategori artikel blog"
+      responses:
+        "200":
+          description: "OK"
+  /api/public/posts:
+    get:
+      tags: ["Public"]
+      summary: "Mengambil daftar seluruh artikel terbit"
+      responses:
+        "200":
+          description: "OK"
+  /api/public/posts/{slug}:
+    get:
+      tags: ["Public"]
+      summary: "Mengambil detail artikel publik terbit berdasarkan slug"
+      responses:
+        "200":
+          description: "OK"
+  /api/auth/register:
+    post:
+      tags: ["Auth"]
+      summary: "Pendaftaran akun penulis baru"
+      responses:
+        "201":
+          description: "Created"
+  /api/auth/login:
+    post:
+      tags: ["Auth"]
+      summary: "Autentikasi kredensial pengguna dan penerbitan token JWT"
+      responses:
+        "200":
+          description: "OK"
+  /api/auth/logout:
+    post:
+      tags: ["Auth"]
+      summary: "Logout sesi pengguna"
+      responses:
+        "200":
+          description: "OK"
+  /api/auth/profile:
+    get:
+      tags: ["Auth"]
+      summary: "Mengambil data profil penulis yang sedang login"
+      responses:
+        "200":
+          description: "OK"
+    put:
+      tags: ["Auth"]
+      summary: "Memperbarui informasi profil penulis yang sedang login"
+      responses:
+        "200":
+          description: "OK"
+  /api/posts:
+    get:
+      tags: ["Posts"]
+      summary: "Mengambil seluruh daftar artikel milik penulis yang sedang login"
+      responses:
+        "200":
+          description: "OK"
+    post:
+      tags: ["Posts"]
+      summary: "Membuat artikel baru"
+      responses:
+        "201":
+          description: "Created"
+  /api/posts/stats:
+    get:
+      tags: ["Posts"]
+      summary: "Mengambil ringkasan 3 kartu statistik penulis"
+      responses:
+        "200":
+          description: "OK"
+  /api/posts/{id}:
+    get:
+      tags: ["Posts"]
+      summary: "Mengambil detail satu artikel milik penulis berdasarkan ID"
+      responses:
+        "200":
+          description: "OK"
+    put:
+      tags: ["Posts"]
+      summary: "Memperbarui artikel milik penulis"
+      responses:
+        "200":
+          description: "OK"
+    delete:
+      tags: ["Posts"]
+      summary: "Menghapus artikel milik penulis"
+      responses:
+        "200":
+          description: "OK"
+  /api/posts/{id}/toggle-publish:
+    patch:
+      tags: ["Posts"]
+      summary: "Mengubah status publikasi artikel secara instan"
+      responses:
+        "200":
+          description: "OK"
+  /api/posts/ai-generate:
+    post:
+      tags: ["AI"]
+      summary: "Menghasilkan draf artikel utuh menggunakan AI dan Search Engine"
+      responses:
+        "200":
+          description: "OK"
+  /api/admin/users:
+    get:
+      tags: ["Admin"]
+      summary: "Mengambil data seluruh pengguna sistem beserta total artikel"
+      responses:
+        "200":
+          description: "OK"
+  /api/admin/posts:
+    get:
+      tags: ["Admin"]
+      summary: "Monitoring arsip seluruh artikel dari semua penulis"
+      responses:
+        "200":
+          description: "OK"
+  /api/admin/users/{id}/posts:
+    get:
+      tags: ["Admin"]
+      summary: "Mengambil seluruh artikel yang ditulis oleh pengguna tertentu"
+      responses:
+        "200":
+          description: "OK"
